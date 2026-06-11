@@ -1,0 +1,7 @@
+[
+  {"start": 0.0, "end": 4.2, "speaker": "Người nói 1", "text": "Xin chào mọi người, hôm nay chúng ta sẽ họp về kế hoạch ngân sách quý ba"},
+  {"start": 4.5, "end": 9.0, "speaker": "Người nói 2", "text": "Vâng, tôi đã chuẩn bị báo cáo về KPI của đội kinh doanh"},
+  {"start": 9.2, "end": 14.0, "speaker": "Người nói 1", "text": "Cảm ơn anh, chúng ta cũng cần bàn về hợp tác với đối tác mới"},
+  {"start": 14.3, "end": 19.5, "speaker": "Người nói 3", "text": "Tôi nghĩ chúng ta nên ưu tiên rà soát ngân sách trước khi ký hợp đồng"},
+  {"start": 19.8, "end": 25.0, "speaker": "Người nói 2", "text": "Đồng ý, tôi sẽ gửi bản cập nhật KPI vào cuối tuần này"}
+]

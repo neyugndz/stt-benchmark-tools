@@ -96,6 +96,73 @@ benchmark/
   parsers.py     - đọc transcript (JSON/text) thành các Segment(start,end,speaker,text)
   metrics.py     - tính WER/CER/DER/TER/RTF/ROUGE-L...
   thresholds.py  - bảng tiêu chí + ngưỡng từ Benchmarking_SmartMeeting.docx
-app.py           - giao diện Streamlit
+app.py           - giao diện Streamlit (đánh giá từng phiên, qua giao diện web)
+scripts/
+  batch_eval.py     - chạy metrics cho nhiều phiên cùng lúc, xuất report/batch_eval_results.csv
+  groundtruth_qa.py - QA/sửa ground truth (kiểm tốc độ nói, gán lại nhãn người nói theo RTTM)
 sample_data/     - file transcript mẫu để test nhanh
+report/          - báo cáo Markdown/CSV sinh ra từ app.py và scripts/batch_eval.py
 ```
+
+## Đánh giá theo lô (scripts/batch_eval.py)
+
+Để chạy metrics cho nhiều phiên ghi âm cùng lúc và xuất một bảng tổng hợp,
+dùng `scripts/batch_eval.py`. Script này yêu cầu các thư mục dữ liệu nằm
+**ngang hàng** với `stt-benchmark-tools/` (cùng cấp), theo cấu trúc:
+
+```
+benchmark/                          <- thư mục gốc, KHÔNG phải repo này
+  stt-benchmark-tools/              <- repo này
+  data_groundtruth/
+    transcript_<ten_phien>_groundtruth.json
+    rttm/<ten_phien>.rttm           (tuỳ chọn, dùng cho groundtruth_qa.py relabel)
+  data_hypothesis/
+    <ten_phien>/
+      transcript_<ten_phien>.txt    <- output của hệ thống
+      timings.json                  <- {"stt": ..., "diarization": ...} (giây)
+      <ten_phien>.wav                (tuỳ chọn, nếu có sẽ dùng để tính RTF chính xác)
+```
+
+Danh sách các phiên + đường dẫn tương ứng được khai báo trong `PAIRS` ở đầu
+file `scripts/batch_eval.py` - chỉnh sửa danh sách này cho phù hợp với dữ
+liệu trên máy của bạn.
+
+Chạy:
+
+```powershell
+.venv\Scripts\python scripts\batch_eval.py
+```
+
+Kết quả in ra console và lưu vào `report/batch_eval_results.csv`.
+
+## QA / sửa ground truth (scripts/groundtruth_qa.py)
+
+Ground truth do LLM sinh ra có thể gặp 2 lỗi phổ biến:
+
+1. **Tóm tắt/diễn giải thay vì transcribe verbatim** - kiểm bằng:
+   ```powershell
+   .venv\Scripts\python scripts\groundtruth_qa.py wordrate <groundtruth.json> [...]
+   ```
+   File có tốc độ < 2.2 từ/giây hoặc > 5.0 từ/giây sẽ bị cảnh báo.
+
+2. **"Trôi" số thứ tự người nói** trên phiên dài (LLM gán nhầm số khi một
+   người quay lại sau khoảng lặng dài) - nếu có file RTTM với nhãn người nói
+   ổn định (ví dụ từ pyannote diarization), gán lại nhãn theo overlap thời
+   gian:
+   ```powershell
+   .venv\Scripts\python scripts\groundtruth_qa.py diff <groundtruth.json> <rttm>
+   .venv\Scripts\python scripts\groundtruth_qa.py relabel <groundtruth.json> <rttm> <out.json>
+   ```
+   `diff` chỉ in ra các đoạn bị lệch nhãn (để kiểm tra trước); `relabel` ghi
+   ra file mới với nhãn "Người nói N" đã sửa.
+
+## Báo cáo
+
+- `report/benchmark_report_*.md` - báo cáo từng phiên, sinh từ `app.py`
+  (Streamlit).
+- `report/batch_eval_results.csv` - số liệu thô cho nhiều phiên, sinh từ
+  `scripts/batch_eval.py`.
+- `report/bao_cao_tong_hop.md` - báo cáo tổng hợp 8 phiên, đối chiếu với
+  toàn bộ bảng tiêu chí trong `benchmark/thresholds.py`, kèm các lưu ý về
+  chất lượng ground truth (xem mục "Dữ liệu đầu vào & lưu ý chất lượng"
+  trong file đó trước khi trích số liệu sang báo cáo khác).

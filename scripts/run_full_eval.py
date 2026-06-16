@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmark import metrics, report
-from benchmark.parsers import parse_transcript, segments_to_text
+from benchmark.parsers import parse_transcript, segments_to_text, merge_same_speaker_segments
 from benchmark.thresholds import CRITERIA, evaluate_all, PASS, FAIL, NA, MANUAL
 
 BENCH_DIR = ROOT.parent
@@ -97,6 +97,7 @@ def audio_duration(wav_path: Path) -> float | None:
 def run_session(name, audio_name, gt_path, hyp_path, timings_path, wav_path):
     ref_segments = parse_transcript(gt_path.read_text(encoding="utf-8"))
     hyp_segments = parse_transcript(hyp_path.read_text(encoding="utf-8"))
+    hyp_segments = merge_same_speaker_segments(hyp_segments)
 
     ref_text = segments_to_text(ref_segments)
     hyp_text = segments_to_text(hyp_segments)

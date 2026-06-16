@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmark import metrics
-from benchmark.parsers import parse_transcript, segments_to_text
+from benchmark.parsers import parse_transcript, segments_to_text, merge_same_speaker_segments
 
 BENCH_DIR = ROOT.parent
 GT_DIR = BENCH_DIR / "data_groundtruth"
@@ -68,6 +68,7 @@ def main() -> None:
     for name, gt_path, hyp_path, timings_path, wav_path in PAIRS:
         ref_segments = parse_transcript(gt_path.read_text(encoding="utf-8"))
         hyp_segments = parse_transcript(hyp_path.read_text(encoding="utf-8"))
+        hyp_segments = merge_same_speaker_segments(hyp_segments)
 
         ref_text = segments_to_text(ref_segments)
         hyp_text = segments_to_text(hyp_segments)

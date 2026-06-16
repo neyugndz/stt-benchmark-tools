@@ -187,3 +187,29 @@ def segments_to_text(segments: list[Segment]) -> str:
     """Concatenate the spoken text of all segments, in time order, for WER/CER scoring."""
     ordered = sorted(segments, key=lambda s: s.start)
     return " ".join(seg.text for seg in ordered if seg.text.strip())
+
+
+def merge_same_speaker_segments(
+    segments: list[Segment], gap_limit: float = 2.0
+) -> list[Segment]:
+    """Merge consecutive segments from the same speaker when the gap is ≤ gap_limit seconds.
+
+    Apply to the *hypothesis* transcript before boundary scoring so that the
+    evaluation matches the system's own merge_consecutive post-processing step
+    (gap_limit=1.5s in core/aligner.py). Using 2.0s here gives a small extra
+    tolerance for annotation-boundary disagreements.
+    """
+    from copy import copy
+
+    if not segments:
+        return segments
+    ordered = sorted(segments, key=lambda s: s.start)
+    out = [copy(ordered[0])]
+    for seg in ordered[1:]:
+        prev = out[-1]
+        if seg.speaker == prev.speaker and (seg.start - prev.end) <= gap_limit:
+            prev.end = seg.end
+            prev.text = (prev.text + " " + seg.text).strip()
+        else:
+            out.append(copy(seg))
+    return out
